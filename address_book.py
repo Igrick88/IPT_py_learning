@@ -178,7 +178,7 @@ class ABService:
         :return: Найденные записи
         """
 
-        self.saver.find_account()
+        return self.saver.find_account()
 
 
 class Front:
@@ -299,7 +299,7 @@ def menu(choice, abservice: ABService, front: Front):
                               acc_fields['middle_name'], acc_fields['phone'])
             abservice.add_account(acc)
         elif choice.lower() == 'и':
-            account_to_update = Front.confirm_account(address_book.find_account(), mode='и')
+            account_to_update = Front.confirm_account(abservice.find_account(), mode='и')
             if account_to_update is not None:
                 account_to_update.update_account()
                 InteractionWithFile.save_to_csv(address_book, file_name)
@@ -309,7 +309,7 @@ def menu(choice, abservice: ABService, front: Front):
                 address_book.delete_account(account_to_delete)
                 InteractionWithFile.save_to_csv(address_book, file_name)
         elif choice.lower() == 'н':
-            accounts = address_book.find_account()
+            accounts = abservice.find_account()
             for account in accounts:
                 print(account)
             if len(accounts) == 0:
