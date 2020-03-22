@@ -348,8 +348,7 @@ ab = ABData(description=ab_description, accounts=[])
 interactor = InteractionWithFile(file_name, ab)
 interactor.get_ab_from_csv()
 saver = Saver(interactor, ab)
-abservice = ABService
-abservice.saver = saver
+abservice = ABService(saver)
 front = Front(ab)
 
 menu(mode, abservice, front)
