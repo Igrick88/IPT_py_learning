@@ -25,13 +25,13 @@ class Account:
     def __lt__(self, other):
         return self.last_name.lower() < other.last_name.lower()
 
-    def update_account(self):
-        if self is not None:
-            a = Front.ask_for_account_data()
-            self.last_name = a.last_name.replace(',', ' ') or self.last_name
-            self.first_name = a.first_name.replace(',', ' ') or self.first_name
-            self.middle_name = a.middle_name.replace(',', ' ') or self.middle_name
-            self.phone = a.phone.replace(',', ' ') or self.phone
+    # def update_account(self):
+    #     if self is not None:
+    #         a = Front.ask_for_account_data()
+    #         self.last_name = a.last_name.replace(',', ' ') or self.last_name
+    #         self.first_name = a.first_name.replace(',', ' ') or self.first_name
+    #         self.middle_name = a.middle_name.replace(',', ' ') or self.middle_name
+    #         self.phone = a.phone.replace(',', ' ') or self.phone
 
 
 @dataclass
@@ -91,7 +91,9 @@ class AbsCls(metaclass=abc.ABCMeta):
                 hasattr(subclass, 'add_account') and
                 callable(subclass.add_account) and
                 hasattr(subclass, 'find_account') and
-                callable(subclass.find_account))
+                callable(subclass.find_account) and
+                hasattr(subclass, 'update_account') and
+                callable(subclass.update_account))
 
     @abc.abstractmethod
     def delete_account(self):
@@ -106,6 +108,11 @@ class AbsCls(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def find_account(self):
         """Найти запись"""
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def update_account(self, account: Account, new_data):
+        """Обновить запись"""
         raise NotImplementedError
 
 
@@ -148,6 +155,13 @@ class Saver(AbsCls):
                 accounts.append(account)
         return sorted(accounts)
 
+    def update_account(self, account: Account, new_data: dict):
+        if account is not None:
+            account.last_name = new_data['last_name'].replace(',', ' ') or account.last_name
+            account.first_name = new_data['first_name'].replace(',', ' ') or account.first_name
+            account.middle_name = new_data['middle_name'].replace(',', ' ') or account.middle_name
+            account.phone = new_data['phone'].replace(',', ' ') or account.phone
+
 
 class ABService:
     """
@@ -163,7 +177,7 @@ class ABService:
         self.saver = saver
 
     def delete_account(self, account):
-        self.saver.delete_account(self, account)
+        self.saver.delete_account(account)
 
     def add_account(self, account):
         """
@@ -177,8 +191,14 @@ class ABService:
         Поиск записей по начальным буквам фамилии (регистронезависимый)
         :return: Найденные записи
         """
-
         return self.saver.find_account()
+
+    def update_account(self, account, new_data):
+        """
+        Обновление записи по новым данным
+        :return: Найденные записи
+        """
+        return self.saver.update_account(account, new_data)
 
 
 class Front:
@@ -289,20 +309,23 @@ class Front:
         print(f'Запись "{account}" сохранена')
 
 
-def menu(choice, abservice: ABService, front: Front):
+def menu(choice, abservice: ABService, front: Front, interactor: InteractionWithFile):
     while True:
         if choice.lower() == 'п':
             front.show_address_book()
         elif choice.lower() == 'д':
             acc_fields = front.ask_for_account_data()
             acc = Account(acc_fields['account_id'], acc_fields['last_name'], acc_fields['first_name'],
-                              acc_fields['middle_name'], acc_fields['phone'])
+                          acc_fields['middle_name'], acc_fields['phone'])
             abservice.add_account(acc)
         elif choice.lower() == 'и':
-            account_to_update = Front.confirm_account(abservice.find_account(), mode='и')
+            account_to_update = front.confirm_account(abservice.find_account(), mode='и')
+            abservice.update_account(account_to_update, front.ask_for_account_data())
             if account_to_update is not None:
-                account_to_update.update_account()
-                InteractionWithFile.save_to_csv(address_book, file_name)
+                # abservice.saver.file_interactor.save_to_csv()
+                # почемуто не смог до интерактора через saver добраться, пришлось
+                # интерактора как аргумент menu() добавлять
+                interactor.save_to_csv()
         elif choice.lower() == 'у':
             account_to_delete = Front.confirm_account(address_book.find_account(), mode='у')
             if account_to_delete is not None:
@@ -351,4 +374,4 @@ saver = Saver(interactor, ab)
 abservice = ABService(saver)
 front = Front(ab)
 
-menu(mode, abservice, front)
+menu(mode, abservice, front, interactor)
