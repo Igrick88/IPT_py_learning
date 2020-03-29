@@ -25,13 +25,12 @@ class Account:
     def __lt__(self, other):
         return self.last_name.lower() < other.last_name.lower()
 
-    # def update_account(self):
-    #     if self is not None:
-    #         a = Front.ask_for_account_data()
-    #         self.last_name = a.last_name.replace(',', ' ') or self.last_name
-    #         self.first_name = a.first_name.replace(',', ' ') or self.first_name
-    #         self.middle_name = a.middle_name.replace(',', ' ') or self.middle_name
-    #         self.phone = a.phone.replace(',', ' ') or self.phone
+    def update_account(self, new_data: dict):
+        if new_data is not None:
+            self.last_name = new_data['last_name'].replace(',', ' ') or self.last_name
+            self.first_name = new_data['first_name'].replace(',', ' ') or self.first_name
+            self.middle_name = new_data['middle_name'].replace(',', ' ') or self.middle_name
+            self.phone = new_data['phone'].replace(',', ' ') or self.phone
 
 
 @dataclass
@@ -154,13 +153,6 @@ class Saver(AbsCls):
             if account.last_name.lower().startswith(inputed.lower()):
                 accounts.append(account)
         return sorted(accounts)
-
-    def update_account(self, account: Account, new_data: dict):
-        if account is not None:
-            account.last_name = new_data['last_name'].replace(',', ' ') or account.last_name
-            account.first_name = new_data['first_name'].replace(',', ' ') or account.first_name
-            account.middle_name = new_data['middle_name'].replace(',', ' ') or account.middle_name
-            account.phone = new_data['phone'].replace(',', ' ') or account.phone
 
 
 class ABService:
